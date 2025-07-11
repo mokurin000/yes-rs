@@ -6,7 +6,7 @@ const TIMES: usize = 1024;
 const CONTENT: [u8; 4] = [b'y', b'e', b's', b'\n'];
 
 fn main() {
-    _ = fcntl_setpipe_size(stdout(), 1048576);
+    fcntl_setpipe_size(stdout(), 1048576).expect("stdout must be pipefd");
 
     let buf: [u8; TIMES * CONTENT.len()] = unsafe { transmute([CONTENT; TIMES]) };
     let bufs: Vec<_> = (0..BATCH).map(|_| IoSliceRaw::from_slice(&buf)).collect();
