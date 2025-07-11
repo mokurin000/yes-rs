@@ -1,7 +1,5 @@
-#![feature(maybe_uninit_slice)]
-
 use rustix::pipe::{IoSliceRaw, SpliceFlags, fcntl_setpipe_size, vmsplice};
-use std::{io::stdout, mem::MaybeUninit, os::fd::AsFd as _};
+use std::{io::stdout, os::fd::AsFd as _};
 
 const BATCH: usize = 8;
 
@@ -11,11 +9,7 @@ fn main() {
     let stdout = stdout().lock();
     let fd = stdout.as_fd();
     let buf = [b'y'; 4096];
-    let mut bufs = [const { MaybeUninit::uninit() }; BATCH];
-    for i in 0..BATCH {
-        bufs[i].write(IoSliceRaw::from_slice(&buf));
-    }
-    let bufs = unsafe { bufs.assume_init_ref() };
+    let bufs: Vec<_> = (0..BATCH).map(|_| IoSliceRaw::from_slice(&buf)).collect();
     loop {
         unsafe {
             _ = vmsplice(fd, &bufs, SpliceFlags::empty());
